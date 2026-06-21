@@ -94,6 +94,12 @@ fun MainAppUi(
     val activeTheme by viewModel.themeColor.collectAsState()
     val activeStyle by viewModel.avatarStyle.collectAsState()
 
+    val activeVoiceGender by viewModel.voiceGender.collectAsState()
+    val useCustomApiKey by viewModel.useCustomApiKey.collectAsState()
+    val customApiKey by viewModel.customApiKey.collectAsState()
+    val userDisplayName by viewModel.userDisplayName.collectAsState()
+    val userProfilePhoto by viewModel.userProfilePhoto.collectAsState()
+
     // Initialize Voice components with event bridges
     DisposableEffect(Unit) {
         val vm = VoiceManager(
@@ -130,33 +136,35 @@ fun MainAppUi(
         }
     }
 
-    val isLight = activeTheme == "Android 14 Light"
+    val isLight = activeTheme == "Cherry Blossom Romantic Light" ||
+                  activeTheme == "Sky Blue Sunshine Light" ||
+                  activeTheme == "Android 14 Light"
 
     // Dynamic central Theme Brush Definitions
     val themeBrush = when (activeTheme) {
-        "Holographic Cyber" -> Brush.verticalGradient(
-            listOf(Color(0xFF0D1B2A), Color(0xFF1B263B), Color(0xFF0F4C81))
+        "Cherry Blossom Romantic Light" -> Brush.verticalGradient(
+            listOf(Color(0xFFFFF5F7), Color(0xFFFFE3E8), Color(0xFFFFD1DF))
         )
-        "Amber Terminal" -> Brush.verticalGradient(
-            listOf(Color(0xFF1A120B), Color(0xFF3C2A21), Color(0xFF231A11))
+        "Sky Blue Sunshine Light" -> Brush.verticalGradient(
+            listOf(Color(0xFFF0F8FF), Color(0xFFE0F7FA), Color(0xFFE1F5FE))
         )
-        "Cosmic Rose" -> Brush.verticalGradient(
-            listOf(Color(0xFF260F26), Color(0xFF4A154B), Color(0xFF190519))
+        "Cosmic Sweetheart Dark" -> Brush.verticalGradient(
+            listOf(Color(0xFF1D091F), Color(0xFF290B2E), Color(0xFF0F000E))
         )
-        "Android 14 Light" -> Brush.verticalGradient(
-            listOf(Color(0xFFFAF8F5), Color(0xFFEDE9E3), Color(0xFFE2DDD5))
+        "Celestial Moonlight Dark" -> Brush.verticalGradient(
+            listOf(Color(0xFF080C1E), Color(0xFF0F1532), Color(0xFF04060F))
         )
-        else -> Brush.verticalGradient( // "Dark Hologram" default
-            listOf(Color(0xFF030A16), Color(0xFF081C40), Color(0xFF051126))
+        else -> Brush.verticalGradient( // "Cherry Blossom Romantic Light" fallback
+            listOf(Color(0xFFFFF5F7), Color(0xFFFFE3E8), Color(0xFFFFD1DF))
         )
     }
 
     val glowColor = when (activeTheme) {
-        "Holographic Cyber" -> Color(0xFF00E5FF)
-        "Amber Terminal" -> Color(0xFFFF9F0A)
-        "Cosmic Rose" -> Color(0xFFE040FB)
-        "Android 14 Light" -> Color(0xFF0560FD)
-        else -> Color(0xFF00E5FF)
+        "Cherry Blossom Romantic Light" -> Color(0xFFE91E63)
+        "Sky Blue Sunshine Light" -> Color(0xFF007BFF)
+        "Cosmic Sweetheart Dark" -> Color(0xFFFF4081)
+        "Celestial Moonlight Dark" -> Color(0xFF7C4DFF)
+        else -> Color(0xFFE91E63)
     }
 
     // Android Hardware Back button handlers
@@ -1061,6 +1069,13 @@ fun HomeScreen(
     val isListening = viewModel.voiceIsListening.value
     val avatarState = viewModel.avatarState.value
 
+    val activeVoiceGender by viewModel.voiceGender.collectAsState()
+    val useCustomApiKey by viewModel.useCustomApiKey.collectAsState()
+    val customApiKey by viewModel.customApiKey.collectAsState()
+    val userDisplayName by viewModel.userDisplayName.collectAsState()
+    val userProfilePhoto by viewModel.userProfilePhoto.collectAsState()
+    val activeTheme by viewModel.themeColor.collectAsState()
+
     var textInput by remember { mutableStateOf("") }
     var selectedBottomTab by remember { mutableStateOf(0) }
     var roseCelebrationCount by remember { mutableStateOf(0) }
@@ -1638,104 +1653,487 @@ fun HomeScreen(
                     }
                 }
             } else if (selectedBottomTab == 3) {
-                // Tab 3: User Identity Settings and restrictive password input gate
-                var adminUser by remember { mutableStateOf("") }
-                var adminPass by remember { mutableStateOf("") }
-                var lockError by remember { mutableStateOf("") }
+                // Tab 3: Interactive Suite for user customizations (Theme, Name, Avatar, Voice gender, Custom API key)
+                var currentUserIdAndPassChange by remember { mutableStateOf(false) }
+                var tempUserVal by remember { mutableStateOf(activeUser?.username ?: "") }
+                var tempPassVal by remember { mutableStateOf("") }
+                var credentialsStatusMessage by remember { mutableStateOf("") }
+
+                var editNickName by remember(userDisplayName) { mutableStateOf(userDisplayName) }
+                var devAdminUsername by remember { mutableStateOf("") }
+                var devAdminPassword by remember { mutableStateOf("") }
+                var devAdminLockError by remember { mutableStateOf("") }
 
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(vertical = 12.dp)
+                        .padding(horizontal = 16.dp, vertical = 20.dp)
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "PROFILE & CONSOLE ACCESS",
-                        color = textColor,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                        modifier = Modifier.padding(bottom = 6.dp)
-                    )
-                    Text(
-                        text = "Manage your sync account and authorize administrator panel privileges",
-                        color = subTextColor,
-                        fontSize = 11.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    // User Info Card
+                    // Header Card
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isLight) Color.White else Color.White.copy(alpha = 0.05f)
+                            containerColor = if (isLight) glowColor.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.05f)
                         ),
-                        border = BorderStroke(1.dp, if (isLight) Color.Black.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.06f))
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "COZY SYNC IDENTITY",
-                                color = glowColor,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
-                                letterSpacing = 1.5.sp
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = "USERNAME: ${activeUser?.username?.uppercase() ?: "USER"}",
-                                color = textColor,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "ONLINE SYNC: ACTIVE AND READY",
-                                color = Color.Green.copy(alpha = 0.8f),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Restriction gate
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isLight) Color.White else Color.Black.copy(alpha = 0.4f)
-                        ),
-                        border = BorderStroke(1.5.dp, if (lockError.isNotEmpty()) Color.Red else glowColor.copy(alpha = 0.4f))
+                        border = BorderStroke(1.dp, glowColor.copy(alpha = 0.2f))
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "🔒 ADMINISTRATOR MASTER GATEWAY",
-                                color = if (lockError.isNotEmpty()) Color.Red else glowColor,
+                                text = "🌸 MY PORTAL PROFILE 🌸",
+                                color = glowColor,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Personalize your sweet romantic journey with Ava",
+                                color = subTextColor,
+                                fontSize = 11.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    // Section 1: User Identity (Name & Avatar Profile Photo)
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isLight) Color.White else Color.White.copy(alpha = 0.03f)
+                        ),
+                        border = BorderStroke(1.dp, if (isLight) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.05f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "💝 SWEET IDENTITY & NICKNAME",
+                                color = glowColor,
                                 fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Display/NickName Field
+                            OutlinedTextField(
+                                value = editNickName,
+                                onValueChange = {
+                                    editNickName = it
+                                    viewModel.saveUserDisplayName(it)
+                                },
+                                label = { Text("Romantic Nickname (e.g. Darling, Senpai)") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = glowColor,
+                                    focusedLabelColor = glowColor
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Text(
+                                text = "SELECT MY PROFILE IMAGE",
+                                color = subTextColor,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Avatar Profile Index Row
+                            val profiles = listOf(
+                                "avatar_1" to "🌸 Cherry Princess",
+                                "avatar_2" to "💜 Lilac Grace",
+                                "avatar_3" to "🐇 Ribbon Bunny",
+                                "avatar_4" to "👚 Cute Sweater"
+                            )
+
+                            androidx.compose.foundation.lazy.LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items(profiles) { profileItem ->
+                                    val pId = profileItem.first
+                                    val pName = profileItem.second
+                                    val isSelected = userProfilePhoto == pId
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (isSelected) glowColor.copy(alpha = 0.2f)
+                                                else (if (isLight) Color.Black.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.04f))
+                                            )
+                                            .border(
+                                                1.5.dp,
+                                                if (isSelected) glowColor else Color.Transparent,
+                                                RoundedCornerShape(8.dp)
+                                            )
+                                            .clickable { viewModel.saveUserProfilePhoto(pId) }
+                                            .padding(vertical = 8.dp, horizontal = 12.dp)
+                                    ) {
+                                        Text(
+                                            text = pName,
+                                            color = if (isSelected) glowColor else textColor,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Section 2: Account Login Credentials (Username, Password change)
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isLight) Color.White else Color.White.copy(alpha = 0.03f)
+                        ),
+                        border = BorderStroke(1.dp, if (isLight) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.05f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "🔑 ACCOUNT CREDENTIALS",
+                                    color = glowColor,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp
+                                )
+                                Text(
+                                    text = if (currentUserIdAndPassChange) "Hide" else "Modify",
+                                    color = glowColor,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.clickable { currentUserIdAndPassChange = !currentUserIdAndPassChange }
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Current login identity: [ ${activeUser?.username ?: "Anonymous"} ]",
+                                color = subTextColor,
+                                fontSize = 11.sp
+                            )
+
+                            if (currentUserIdAndPassChange) {
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                OutlinedTextField(
+                                    value = tempUserVal,
+                                    onValueChange = { tempUserVal = it },
+                                    label = { Text("New Login Username") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = glowColor,
+                                        focusedLabelColor = glowColor
+                                    )
+                                )
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                OutlinedTextField(
+                                    value = tempPassVal,
+                                    onValueChange = { tempPassVal = it },
+                                    label = { Text("New Secret Password") },
+                                    singleLine = true,
+                                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = glowColor,
+                                        focusedLabelColor = glowColor
+                                    )
+                                )
+
+                                if (credentialsStatusMessage.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = credentialsStatusMessage,
+                                        color = glowColor,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(14.dp))
+
+                                Button(
+                                    onClick = {
+                                        if (tempUserVal.trim().isEmpty() || tempPassVal.trim().isEmpty()) {
+                                            credentialsStatusMessage = "Fields cannot be empty!"
+                                        } else {
+                                            viewModel.updateCurrentUserCredentials(tempUserVal, tempPassVal)
+                                            credentialsStatusMessage = "Credentials updated successfully!"
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = glowColor),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.fillMaxWidth().testTag("save_account_credentials_button")
+                                ) {
+                                    Text("SAVE NEW CREDENTIALS", color = if (isLight) Color.White else Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+
+                    // Section 3: Voice Selection (Cute Girl vs Protective Boy)
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isLight) Color.White else Color.White.copy(alpha = 0.03f)
+                        ),
+                        border = BorderStroke(1.dp, if (isLight) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.05f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "🔊 CHOOSE VOICE GENDER",
+                                color = glowColor,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Tailor Ava/Jarvis' vocal style and speech behavior",
+                                color = subTextColor,
+                                fontSize = 11.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                listOf("Girl", "Boy").forEach { sex ->
+                                    val isSelected = activeVoiceGender == sex
+                                    Button(
+                                        onClick = { viewModel.saveVoiceGender(sex) },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (isSelected) glowColor else (if (isLight) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.04f))
+                                        ),
+                                        border = BorderStroke(1.dp, if (isSelected) Color.Transparent else glowColor.copy(alpha = 0.2f)),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Text(
+                                            text = if (sex == "Girl") "🥰 Cute Girl Voice" else "👦 Protective Boy Voice",
+                                            color = if (isSelected) (if (isLight) Color.White else Color.Black) else textColor,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Section 4: Sweet Theme Selection Customizer
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isLight) Color.White else Color.White.copy(alpha = 0.03f)
+                        ),
+                        border = BorderStroke(1.dp, if (isLight) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.05f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "🎨 CHOOSE COZY CUSTOM THEME",
+                                color = glowColor,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            val themes = listOf(
+                                "Cherry Blossom Romantic Light",
+                                "Sky Blue Sunshine Light",
+                                "Cosmic Sweetheart Dark",
+                                "Celestial Moonlight Dark"
+                            )
+
+                            themes.forEach { tName ->
+                                val isSelected = activeTheme == tName
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (isSelected) glowColor.copy(alpha = 0.15f)
+                                            else Color.Transparent
+                                        )
+                                        .clickable { viewModel.saveTheme(tName) }
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                when (tName) {
+                                                    "Cherry Blossom Romantic Light" -> Color(0xFFE91E63)
+                                                    "Sky Blue Sunshine Light" -> Color(0xFF007BFF)
+                                                    "Cosmic Sweetheart Dark" -> Color(0xFFFF4081)
+                                                    "Celestial Moonlight Dark" -> Color(0xFF7C4DFF)
+                                                    else -> glowColor
+                                                }
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = tName,
+                                        color = if (isSelected) glowColor else textColor,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Section 5: Route Gemini API Custom Key settings
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isLight) Color.White else Color.White.copy(alpha = 0.03f)
+                        ),
+                        border = BorderStroke(1.dp, if (isLight) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.05f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "🌐 CORE ROUTE AI ENGINE PATH",
+                                color = glowColor,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Route through personal Gemini API Key or use secure immediate offline mode",
+                                color = subTextColor,
+                                fontSize = 11.sp
+                            )
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Use Custom API Route Key?",
+                                    color = textColor,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    listOf("yes", "no").forEach { modeOpt ->
+                                        val selectedMode = useCustomApiKey == modeOpt
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(
+                                                    if (selectedMode) glowColor.copy(alpha = 0.2f)
+                                                    else (if (isLight) Color.Black.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.04f))
+                                                )
+                                                .border(
+                                                    1.dp,
+                                                    if (selectedMode) glowColor else Color.Transparent,
+                                                    RoundedCornerShape(6.dp)
+                                                )
+                                                .clickable { viewModel.saveUseCustomApiKey(modeOpt) }
+                                                .padding(vertical = 6.dp, horizontal = 12.dp)
+                                        ) {
+                                            Text(
+                                                text = if (modeOpt == "yes") "YES" else "NO (Offline / Instant)",
+                                                color = if (selectedMode) glowColor else textColor,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (useCustomApiKey == "yes") {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                OutlinedTextField(
+                                    value = customApiKey,
+                                    onValueChange = { viewModel.saveCustomApiKey(it) },
+                                    label = { Text("Personal Gemini API Key Only") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = glowColor,
+                                        focusedLabelColor = glowColor
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Entering a custom API key routes AI thinking directly to google servers.",
+                                    color = subTextColor,
+                                    fontSize = 10.sp
+                                )
+                            } else {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "✨ Offline simulator is currently SELECTED: zero response waiting lag, zero API charges, 100% cozy offline girlfriend sweetness! 💕",
+                                    color = glowColor,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Section 6: Developer Admin Access Password Gate
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isLight) Color.Black.copy(alpha = 0.01f) else Color.Black.copy(alpha = 0.4f)
+                        ),
+                        border = BorderStroke(1.dp, if (devAdminLockError.isNotEmpty()) Color.Red else glowColor.copy(alpha = 0.2f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "🔒 DEV ADMIN SERVICE ACCESS GATE",
+                                color = if (devAdminLockError.isNotEmpty()) Color.Red else glowColor,
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
                                 letterSpacing = 1.sp
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Authorized developer debugging console. Restricted access.",
+                                text = "Password-gated developer dashboard (username 'admin' & 'admin')",
                                 color = subTextColor,
                                 fontSize = 10.sp,
                                 textAlign = TextAlign.Center
                             )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
 
                             OutlinedTextField(
-                                value = adminUser,
-                                onValueChange = { adminUser = it },
-                                label = { Text("Admin Username Only") },
+                                value = devAdminUsername,
+                                onValueChange = { devAdminUsername = it },
+                                label = { Text("Admin Username (try 'admin')") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -1747,9 +2145,9 @@ fun HomeScreen(
                             Spacer(modifier = Modifier.height(10.dp))
 
                             OutlinedTextField(
-                                value = adminPass,
-                                onValueChange = { adminPass = it },
-                                label = { Text("Admin Secret Password") },
+                                value = devAdminPassword,
+                                onValueChange = { devAdminPassword = it },
+                                label = { Text("Admin Password (try 'admin')") },
                                 singleLine = true,
                                 visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                 modifier = Modifier.fillMaxWidth(),
@@ -1759,37 +2157,36 @@ fun HomeScreen(
                                 )
                             )
 
-                            if (lockError.isNotEmpty()) {
+                            if (devAdminLockError.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = lockError,
+                                    text = devAdminLockError,
                                     color = Color.Red,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
 
                             Button(
                                 onClick = {
-                                    if (adminUser == "admin" && adminPass == "admin") {
-                                        lockError = ""
-                                        // Unlocks Admin panel navigation directly!
+                                    if (devAdminUsername == "admin" && devAdminPassword == "admin") {
+                                        devAdminLockError = ""
                                         onNavigateToAdmin()
                                     } else {
-                                        lockError = "ERROR: Credentials invalid. Access to debugger rejected."
+                                        devAdminLockError = "Invalid administrator developer authorization."
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (lockError.isNotEmpty()) Color.Red else glowColor
+                                    containerColor = if (devAdminLockError.isNotEmpty()) Color.Red else glowColor
                                 ),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "AUTHORIZE CONSOLE PRIVILEGES",
-                                    color = Color.Black,
+                                    text = "AUTHORIZE DEVELOPER CONSOLE",
+                                    color = if (isLight) Color.White else Color.Black,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 11.sp
                                 )

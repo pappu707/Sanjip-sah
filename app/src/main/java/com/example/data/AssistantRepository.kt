@@ -20,6 +20,10 @@ class AssistantRepository(private val dao: AssistantDao) {
         dao.insertUser(User(username = username, passwordHash = passwordHash, isAdmin = isAdmin))
     }
 
+    suspend fun updateUser(user: User) = withContext(Dispatchers.IO) {
+        dao.insertUser(user)
+    }
+
     suspend fun deleteUser(userId: Int) = withContext(Dispatchers.IO) {
         dao.deleteUser(userId)
     }
