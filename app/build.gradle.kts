@@ -126,12 +126,12 @@ dependencies {
 tasks.register("generateDummyAsset") {
     notCompatibleWithConfigurationCache("Generates a dummy asset file")
     doLast {
-        val f = file("src/main/assets/dummy_jarvis_model.bin")
+        val f = file("src/main/assets/dummy_jarvis_model.mp4")
         f.parentFile.mkdirs()
-        if (!f.exists() || f.length() < 21L * 1024 * 1024) {
+        if (!f.exists() || f.length() < 12L * 1024 * 1024) {
             val bytes = ByteArray(1024 * 1024)
             f.outputStream().use { out ->
-                for (i in 0 until 21) {
+                for (i in 0 until 12) {
                     out.write(bytes)
                 }
             }

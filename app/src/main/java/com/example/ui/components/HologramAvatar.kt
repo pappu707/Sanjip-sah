@@ -119,10 +119,10 @@ fun HologramAvatar(
 
     // Breathing scale animation
     val breathingScale by infiniteTransition.animateFloat(
-        initialValue = 0.98f,
-        targetValue = 1.04f,
+        initialValue = 0.99f,
+        targetValue = 1.01f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = EaseInOutSine),
+            animation = tween(3500, easing = EaseInOutSine),
             repeatMode = RepeatMode.Reverse
         ),
         label = "Breathing"
