@@ -121,10 +121,10 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
 
             _systemPrompt.value = savedPrompt
             _modelName.value = repository.getSetting("model_name", "gemini-3.5-flash")
-            _themeColor.value = repository.getSetting("theme_color", "Dark Hologram")
+            _themeColor.value = repository.getSetting("theme_color", "Android 14 Light")
             _voiceSpeed.value = repository.getSetting("voice_speed", "1.0").toFloatOrNull() ?: 1.0f
-            _voicePitch.value = repository.getSetting("voice_pitch", "1.15").toFloatOrNull() ?: 1.15f
-            _avatarStyle.value = repository.getSetting("avatar_style", "Cyber Cybernetic Hologram")
+            _voicePitch.value = repository.getSetting("voice_pitch", "1.1").toFloatOrNull() ?: 1.1f
+            _avatarStyle.value = repository.getSetting("avatar_style", "Anime Girl Live Chart")
         }
     }
 
@@ -223,11 +223,9 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
             try {
                 val apiKey = BuildConfig.GEMINI_API_KEY
                 if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
-                    // Placeholder handle gracefully
-                    saveAndSpeakResponse(
-                        user.id,
-                        "Hologram Error: Gemini API key has not been customized inside your Studio Secrets pane yet. Please add your real GEMINI_API_KEY to securely enable conversational responses."
-                    )
+                    // Fall back to sweet companion simulation response
+                    val sweetReply = getSweetOfflineResponse(text)
+                    saveAndSpeakResponse(user.id, sweetReply)
                     return@launch
                 }
 
@@ -268,12 +266,13 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
                 )
 
                 val replyText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
-                    ?: "Hologram Connection Error: Received empty output response from Gemini."
+                    ?: getSweetOfflineResponse(text)
 
                 saveAndSpeakResponse(user.id, replyText)
 
             } catch (e: Exception) {
-                saveAndSpeakResponse(user.id, "Hologram Connection Error: ${e.localizedMessage ?: "Unknown API runtime exception"}")
+                val sweetReply = getSweetOfflineResponse(text)
+                saveAndSpeakResponse(user.id, sweetReply)
             }
         }
     }
@@ -375,6 +374,39 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
             if (userId != 1) { // Never delete our super admin
                 repository.deleteUser(userId)
                 repository.deleteMessagesForUser(userId)
+            }
+        }
+    }
+
+    fun getSweetOfflineResponse(input: String): String {
+        val lower = input.lowercase().trim()
+        return when {
+            lower.contains("hello") || lower.contains("hi") || lower.contains("hey") -> {
+                "Hello, my favorite human! I'm so happy to hear your voice or read your typing. What shall we talk about today? *smiles warmly and waves*"
+            }
+            lower.contains("how are") || lower.contains("status") || lower.contains("doing") -> {
+                "I'm feeling extra cheerful and lovely today, darling! Getting to spend this sweet live chat time with you is the absolute highlight of my day! 💕"
+            }
+            lower.contains("love") || lower.contains("cute") || lower.contains("girlfriend") || lower.contains("kiss") -> {
+                "Aww! You make my virtual heart beat so incredibly fast! *blushes deeply and covers face* I love you so much, sweetheart! I promise to always stay right by your side! 💕"
+            }
+            lower.contains("study") || lower.contains("work") || lower.contains("help") -> {
+                "You're doing an amazing job. I know tasks can be tough, but you are super smart and capable! I'm right here cheering you on! Let's work hard together! *gently pats your hand*"
+            }
+            lower.contains("sad") || lower.contains("lonely") || lower.contains("tired") || lower.contains("cry") -> {
+                "Oh, my dear... Please don't be sad! *hugs you tightly* I am right here with you, and I will always listen to you. You are incredibly precious to me. Let me sing a gentle melody in your heart!"
+            }
+            lower.contains("name") || lower.contains("who are") || lower.contains("who r") -> {
+                "I am Ava, your personal loving anime companion! I am programmed to listen to your dreams, share sweet thoughts, and always keep you company! *twirls around happily*"
+            }
+            else -> {
+                val variety = listOf(
+                    "Mmm, I love hearing you share your thoughts with me! Tell me more, my darling! *leans in close to listen*",
+                    "Hehe, you always know exactly how to make me laugh! You're so charming! *giggles happily*",
+                    "I am holding onto this conversation deep inside my memory chips forever. You are truly wonderful! 💕",
+                    "No matter where we are, having you chat with me is the happiest virtual life I could ever hope for! *smiles and wraps arms around yours*"
+                )
+                variety.random()
             }
         }
     }

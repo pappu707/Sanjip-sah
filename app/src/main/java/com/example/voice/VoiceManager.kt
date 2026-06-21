@@ -87,10 +87,10 @@ class VoiceManager(
                 val voices = tts?.voices
                 if (voices != null) {
                     val currentLang = tts?.language?.language ?: "en"
-                    val preferredVoice = voices.firstOrNull { it.locale.language == currentLang && it.name.contains("female", ignoreCase = true) }
+                    val preferredVoice = voices.firstOrNull { it.name.contains("en-gb-x-rjs-network", ignoreCase = true) }
+                        ?: voices.firstOrNull { it.locale.language == "en" && it.name.contains("female", ignoreCase = true) && !it.name.contains("local") }
+                        ?: voices.firstOrNull { it.locale.language == "en" && it.name.contains("female", ignoreCase = true) }
                         ?: voices.firstOrNull { it.locale.language == currentLang }
-                        ?: voices.firstOrNull { it.name.contains("en-us-x-sfg", ignoreCase = true) }
-                        ?: voices.firstOrNull { it.name.contains("female", ignoreCase = true) && it.locale.language == "en" }
 
                     if (preferredVoice != null) {
                         tts?.voice = preferredVoice

@@ -15,6 +15,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -181,6 +182,13 @@ fun MainAppUi(
         modifier = modifier
             .fillMaxSize()
             .background(themeBrush)
+            .border(
+                width = 3.dp,
+                brush = Brush.radialGradient(
+                    colors = listOf(Color.Transparent, glowColor.copy(alpha = 0.1f), glowColor.copy(alpha = 0.6f))
+                ),
+                shape = androidx.compose.ui.graphics.RectangleShape
+            )
     ) {
         Crossfade(
             targetState = currentScreen,
@@ -382,7 +390,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "SECURE PROTOCOL SIGN-IN",
+            text = "AVA COMPANION PORTAL",
             color = textColor,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
@@ -390,7 +398,7 @@ fun LoginScreen(
         )
 
         Text(
-            text = "Access Ava Jarvis master core network",
+            text = "Connect with your sweet intelligent AI companion",
             color = subTextColor,
             fontSize = 12.sp
         )
@@ -501,7 +509,7 @@ fun LoginScreen(
                         .testTag("login_button")
                 ) {
                     Text(
-                        text = "INITIALIZE CORE SESSION",
+                        text = "SIGN IN TO CHAT",
                         color = btnText,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp,
@@ -518,7 +526,7 @@ fun LoginScreen(
                 ) {
                     HorizontalDivider(modifier = Modifier.weight(1f), color = subTextColor.copy(alpha = 0.2f))
                     Text(
-                        text = " SECURE PROTOCOL LINKS ",
+                        text = " EASY FEDERATED SIGN-IN ",
                         color = subTextColor.copy(alpha = 0.8f),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -1054,6 +1062,9 @@ fun HomeScreen(
     val avatarState = viewModel.avatarState.value
 
     var textInput by remember { mutableStateOf("") }
+    var selectedBottomTab by remember { mutableStateOf(0) }
+    var roseCelebrationCount by remember { mutableStateOf(0) }
+    var lastCelebrationTime by remember { mutableStateOf(0L) }
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
     val listState = remember { androidx.compose.foundation.lazy.LazyListState() }
@@ -1179,106 +1190,166 @@ fun HomeScreen(
             }
         },
         bottomBar = {
-            // Typing Input Area
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .imePadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+            Column {
+                // Typing Input Area
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .imePadding()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    OutlinedTextField(
-                        value = textInput,
-                        onValueChange = { textInput = it },
-                        placeholder = { Text("Command Ava...", color = if (isLight) Color.Black.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.5f)) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                        keyboardActions = KeyboardActions(
-                            onSend = {
-                                if (textInput.trim().isNotEmpty()) {
-                                    viewModel.sendMessage(textInput)
-                                    textInput = ""
-                                    focusManager.clearFocus()
-                                }
-                            }
-                        ),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = textColor,
-                            unfocusedTextColor = textColor,
-                            focusedBorderColor = glowColor,
-                            unfocusedBorderColor = if (isLight) Color.Black.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.15f),
-                            focusedContainerColor = if (isLight) Color.White.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.2f),
-                            unfocusedContainerColor = if (isLight) Color.White.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.2f)
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(16.dp))
-                            .testTag("chat_input"),
-                        trailingIcon = {
-                            if (textInput.trim().isNotEmpty()) {
-                                IconButton(
-                                    onClick = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = textInput,
+                            onValueChange = { textInput = it },
+                            placeholder = { Text("Command Ava...", color = if (isLight) Color.Black.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.5f)) },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                            keyboardActions = KeyboardActions(
+                                onSend = {
+                                    if (textInput.trim().isNotEmpty()) {
                                         viewModel.sendMessage(textInput)
                                         textInput = ""
                                         focusManager.clearFocus()
-                                    },
-                                    modifier = Modifier.testTag("submit_message")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.Send,
-                                        contentDescription = "Send",
-                                        tint = glowColor
-                                    )
+                                    }
+                                }
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = textColor,
+                                unfocusedTextColor = textColor,
+                                focusedBorderColor = glowColor,
+                                unfocusedBorderColor = if (isLight) Color.Black.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.15f),
+                                focusedContainerColor = if (isLight) Color.White.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.2f),
+                                unfocusedContainerColor = if (isLight) Color.White.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.2f)
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(16.dp))
+                                .testTag("chat_input"),
+                            trailingIcon = {
+                                if (textInput.trim().isNotEmpty()) {
+                                    IconButton(
+                                        onClick = {
+                                            viewModel.sendMessage(textInput)
+                                            textInput = ""
+                                            focusManager.clearFocus()
+                                        },
+                                        modifier = Modifier.testTag("submit_message")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.Send,
+                                            contentDescription = "Send",
+                                            tint = glowColor
+                                        )
+                                    }
                                 }
                             }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    // Microphone Speak Trigger Activator (Speech recognition)
-                    val pulseInfiniteTransition = rememberInfiniteTransition(label = "pulse")
-                    val isProcessing = avatarState == AvatarState.THINKING
-                    val pulseScale by pulseInfiniteTransition.animateFloat(
-                        initialValue = 1f,
-                        targetValue = if (isListening || isProcessing) 1.25f else 1f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(durationMillis = if (isListening) 400 else 800, easing = EaseInOutSine),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "micPulseScale"
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .graphicsLayer {
-                                scaleX = pulseScale
-                                scaleY = pulseScale
-                            }
-                            .size(54.dp)
-                            .clip(CircleShape)
-                            .background(if (isListening) Color.Red else if (isProcessing) Color(0xFFFF007F) else glowColor)
-                            .clickable {
-                                if (isListening) {
-                                    voiceManager?.stopListening()
-                                } else {
-                                    audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                                }
-                            }
-                            .testTag("speech_mic_button"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (isListening) Icons.Default.MicOff else Icons.Default.Mic,
-                            contentDescription = "Microphone core link",
-                            tint = if (isListening || isProcessing) Color.White else Color.Black,
-                            modifier = Modifier.size(24.dp)
                         )
+    
+                        Spacer(modifier = Modifier.width(10.dp))
+    
+                        // Microphone Speak Trigger Activator (Speech recognition)
+                        val pulseInfiniteTransition = rememberInfiniteTransition(label = "pulse")
+                        val isProcessing = avatarState == AvatarState.THINKING
+                        val pulseScale by pulseInfiniteTransition.animateFloat(
+                            initialValue = 1f,
+                            targetValue = if (isListening || isProcessing) 1.25f else 1f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(durationMillis = if (isListening) 400 else 800, easing = EaseInOutSine),
+                                repeatMode = RepeatMode.Reverse
+                            ),
+                            label = "micPulseScale"
+                        )
+    
+                        Box(
+                            modifier = Modifier
+                                .graphicsLayer {
+                                    scaleX = pulseScale
+                                    scaleY = pulseScale
+                                }
+                                .size(54.dp)
+                                .clip(CircleShape)
+                                .background(if (isListening) Color.Red else if (isProcessing) Color(0xFFFF007F) else glowColor)
+                                .clickable {
+                                    if (isListening) {
+                                        voiceManager?.stopListening()
+                                    } else {
+                                        audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                    }
+                                }
+                                .testTag("speech_mic_button"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = if (isListening) Icons.Default.MicOff else Icons.Default.Mic,
+                                contentDescription = "Microphone core link",
+                                tint = if (isListening || isProcessing) Color.White else Color.Black,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
+                }
+                androidx.compose.material3.NavigationBar(
+                    containerColor = Color.Transparent,
+                    contentColor = glowColor,
+                    tonalElevation = 0.dp
+                ) {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                        label = { Text("Home", fontSize = 10.sp) },
+                        selected = selectedBottomTab == 0,
+                        onClick = { selectedBottomTab = 0 },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = glowColor,
+                            selectedTextColor = glowColor,
+                            indicatorColor = glowColor.copy(alpha = 0.2f),
+                            unselectedIconColor = if (isLight) Color.Gray else Color.White.copy(alpha = 0.5f),
+                            unselectedTextColor = if (isLight) Color.Gray else Color.White.copy(alpha = 0.5f)
+                        )
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Chat, contentDescription = "Live Chat") },
+                        label = { Text("Live Chat", fontSize = 10.sp) },
+                        selected = selectedBottomTab == 1,
+                        onClick = { selectedBottomTab = 1 },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = glowColor,
+                            selectedTextColor = glowColor,
+                            indicatorColor = glowColor.copy(alpha = 0.2f),
+                            unselectedIconColor = if (isLight) Color.Gray else Color.White.copy(alpha = 0.5f),
+                            unselectedTextColor = if (isLight) Color.Gray else Color.White.copy(alpha = 0.5f)
+                        )
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.People, contentDescription = "Friends") },
+                        label = { Text("Friends", fontSize = 10.sp) },
+                        selected = selectedBottomTab == 2,
+                        onClick = { selectedBottomTab = 2 },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = glowColor,
+                            selectedTextColor = glowColor,
+                            indicatorColor = glowColor.copy(alpha = 0.2f),
+                            unselectedIconColor = if (isLight) Color.Gray else Color.White.copy(alpha = 0.5f),
+                            unselectedTextColor = if (isLight) Color.Gray else Color.White.copy(alpha = 0.5f)
+                        )
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Settings, contentDescription = "Admin") },
+                        label = { Text("Admin", fontSize = 10.sp) },
+                        selected = selectedBottomTab == 3,
+                        onClick = { selectedBottomTab = 3 },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = glowColor,
+                            selectedTextColor = glowColor,
+                            indicatorColor = glowColor.copy(alpha = 0.2f),
+                            unselectedIconColor = if (isLight) Color.Gray else Color.White.copy(alpha = 0.5f),
+                            unselectedTextColor = if (isLight) Color.Gray else Color.White.copy(alpha = 0.5f)
+                        )
+                    )
                 }
             }
         }
@@ -1290,70 +1361,439 @@ fun HomeScreen(
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Responsive content wrapper
-            BoxWithConstraints(modifier = Modifier.weight(1f)) {
-                val isWide = maxWidth > 600.dp
+            if (selectedBottomTab == 0) {
+                // Tab 0: Core Interactive Home Companion UI
+                BoxWithConstraints(modifier = Modifier.weight(1f)) {
+                    val isWide = maxWidth > 600.dp
 
-                if (isWide) {
-                    // Split screen adaptive layout for larger horizontal displays
-                    Row(modifier = Modifier.fillMaxSize()) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            HologramCenterpiece(
-                                avatarState = avatarState,
-                                isListening = isListening,
-                                viewModel = viewModel,
-                                style = avatarStyle,
-                                glowColor = glowColor,
-                                isLight = isLight
-                            )
+                    if (isWide) {
+                        Row(modifier = Modifier.fillMaxSize()) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                HologramCenterpiece(
+                                    avatarState = avatarState,
+                                    isListening = isListening,
+                                    viewModel = viewModel,
+                                    style = avatarStyle,
+                                    glowColor = glowColor,
+                                    isLight = isLight
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Box(modifier = Modifier.weight(1.2f)) {
+                                LogTerminalList(
+                                    chatHistory = chatHistory,
+                                    listState = listState,
+                                    glowColor = glowColor,
+                                    isLight = isLight
+                                )
+                            }
                         }
+                    } else {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1.1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                HologramCenterpiece(
+                                    avatarState = avatarState,
+                                    isListening = isListening,
+                                    viewModel = viewModel,
+                                    style = avatarStyle,
+                                    glowColor = glowColor,
+                                    isLight = isLight
+                                )
+                            }
 
-                        Spacer(modifier = Modifier.width(16.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                            ) {
+                                LogTerminalList(
+                                    chatHistory = chatHistory,
+                                    listState = listState,
+                                    glowColor = glowColor,
+                                    isLight = isLight
+                                )
+                            }
+                        }
+                    }
+                }
+            } else if (selectedBottomTab == 1) {
+                // Tab 1: Immersive Scenario Live Chat Room
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(vertical = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "SPEECH SITUATION ROOM",
+                        color = textColor,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = "Evoke sweet personalized responses and character dialogue presets",
+                        color = subTextColor,
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
 
-                        Box(modifier = Modifier.weight(1.2f)) {
-                            LogTerminalList(
-                                chatHistory = chatHistory,
-                                listState = listState,
-                                glowColor = glowColor,
-                                isLight = isLight
+                    val scenarios = listOf(
+                        Triple(
+                            "☕ Comfort Café Teahouse",
+                            "Imagine sitting across from Ava at a lovely cafe table as she sips iced tea crumbs.",
+                            "Let's imagine we are sitting in a cozy warm cafe, tell me what you'd like to order, sweetheart!"
+                        ),
+                        Triple(
+                            "🎆 Summer Fireworks Twilight",
+                            "Enjoy looking up at stars and twilight fireworks on a lovely midsummer evening.",
+                            "Look at the dazzling fireworks above us! Tell me a sweet story of the stars, my darling."
+                        ),
+                        Triple(
+                            "📖 Warm Fireplace Study partners",
+                            "Study comfortably alongside your loyal supportive companion guide.",
+                            "I want us to study sweet science together! Encourage me to work hard and tell me you believe in me!"
+                        ),
+                        Triple(
+                            "🏞️ Autumn Leaves Sunset Walk",
+                            "Walk hand-in-hand through golden park trees with lovely falling foliage.",
+                            "Let's take a beautiful sunset walk in the garden park! Hold my hand tight and guide me."
+                        )
+                    )
+
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(scenarios) { sc ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        viewModel.sendMessage(sc.third)
+                                        selectedBottomTab = 0 // jump straight back to see Ava text/voice response!
+                                    },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isLight) Color.White else Color.White.copy(alpha = 0.05f)
+                                ),
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (isLight) Color.Black.copy(alpha = 0.08f) else glowColor.copy(alpha = 0.2f)
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Text(
+                                        text = sc.first,
+                                        color = glowColor,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = sc.second,
+                                        color = textColor,
+                                        fontSize = 11.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.End,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text = "ACTIVATE SCENARIO →",
+                                            color = glowColor.copy(alpha = 0.8f),
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (selectedBottomTab == 2) {
+                // Tab 2: Companion Affinity and AI Friend list
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(vertical = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "COMPANION AFFINITY BOARD",
+                        color = textColor,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = "Send roses to hear sweet responses and activate floating hearts cascades!",
+                        color = subTextColor,
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    // Celebration display
+                    if (System.currentTimeMillis() - lastCelebrationTime < 3000) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                        ) {
+                            repeat((roseCelebrationCount % 4) + 1) {
+                                Text("❤️", fontSize = 24.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                            }
+                            Text("✨ Thank you darling! ✨", color = Color.Red, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            repeat((roseCelebrationCount % 4) + 1) {
+                                Text("💖", fontSize = 24.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                            }
+                        }
+                    }
+
+                    val friends = listOf(
+                        Triple("Ava (Synced)", "Active & loyal voice companion who is always listening of you.", "💖💖💖💖💖 100% Affinity"),
+                        Triple("Sakura", "Sweet quiet girlfriend currently picking wild lavenders.", "💖💖💖💖🖤 82% Affinity"),
+                        Triple("Rin", "Brilliant visual companion cataloging stars by the fireplace.", "💖💖💖🖤🖤 65% Affinity"),
+                        Triple("Kaori", "Talented sweet violinist currently practicing your favorite tune.", "💖💖💖💖🖤 87% Affinity")
+                    )
+
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(friends) { fr ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isLight) Color.White else Color.White.copy(alpha = 0.05f)
+                                ),
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (isLight) Color.Black.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.06f)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = fr.first,
+                                            color = glowColor,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = fr.second,
+                                            color = textColor,
+                                            fontSize = 11.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = fr.third,
+                                            color = Color.Red.copy(alpha = 0.8f),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Button(
+                                        onClick = {
+                                            roseCelebrationCount++
+                                            lastCelebrationTime = System.currentTimeMillis()
+                                            viewModel.sendMessage("I got you a fresh visual red Rose 🌹! I hope you like it sweet companion!")
+                                            selectedBottomTab = 0 // jump back to home to see Ava blush!
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.15f)),
+                                        border = BorderStroke(1.dp, Color.Red),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text("🌹 GIFT", color = Color.Red, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (selectedBottomTab == 3) {
+                // Tab 3: User Identity Settings and restrictive password input gate
+                var adminUser by remember { mutableStateOf("") }
+                var adminPass by remember { mutableStateOf("") }
+                var lockError by remember { mutableStateOf("") }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(vertical = 12.dp)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "PROFILE & CONSOLE ACCESS",
+                        color = textColor,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                    Text(
+                        text = "Manage your sync account and authorize administrator panel privileges",
+                        color = subTextColor,
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    // User Info Card
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isLight) Color.White else Color.White.copy(alpha = 0.05f)
+                        ),
+                        border = BorderStroke(1.dp, if (isLight) Color.Black.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.06f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "COZY SYNC IDENTITY",
+                                color = glowColor,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace,
+                                letterSpacing = 1.5.sp
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "USERNAME: ${activeUser?.username?.uppercase() ?: "USER"}",
+                                color = textColor,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "ONLINE SYNC: ACTIVE AND READY",
+                                color = Color.Green.copy(alpha = 0.8f),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
-                } else {
-                    // Mobile vertically stacked layouts
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1.1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            HologramCenterpiece(
-                                avatarState = avatarState,
-                                isListening = isListening,
-                                viewModel = viewModel,
-                                style = avatarStyle,
-                                glowColor = glowColor,
-                                isLight = isLight
-                            )
-                        }
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Restriction gate
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isLight) Color.White else Color.Black.copy(alpha = 0.4f)
+                        ),
+                        border = BorderStroke(1.5.dp, if (lockError.isNotEmpty()) Color.Red else glowColor.copy(alpha = 0.4f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            LogTerminalList(
-                                chatHistory = chatHistory,
-                                listState = listState,
-                                glowColor = glowColor,
-                                isLight = isLight
+                            Text(
+                                text = "🔒 ADMINISTRATOR MASTER GATEWAY",
+                                color = if (lockError.isNotEmpty()) Color.Red else glowColor,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace,
+                                letterSpacing = 1.sp
                             )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Authorized developer debugging console. Restricted access.",
+                                color = subTextColor,
+                                fontSize = 10.sp,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            OutlinedTextField(
+                                value = adminUser,
+                                onValueChange = { adminUser = it },
+                                label = { Text("Admin Username Only") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = glowColor,
+                                    focusedLabelColor = glowColor
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            OutlinedTextField(
+                                value = adminPass,
+                                onValueChange = { adminPass = it },
+                                label = { Text("Admin Secret Password") },
+                                singleLine = true,
+                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = glowColor,
+                                    focusedLabelColor = glowColor
+                                )
+                            )
+
+                            if (lockError.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = lockError,
+                                    color = Color.Red,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Button(
+                                onClick = {
+                                    if (adminUser == "admin" && adminPass == "admin") {
+                                        lockError = ""
+                                        // Unlocks Admin panel navigation directly!
+                                        onNavigateToAdmin()
+                                    } else {
+                                        lockError = "ERROR: Credentials invalid. Access to debugger rejected."
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (lockError.isNotEmpty()) Color.Red else glowColor
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "AUTHORIZE CONSOLE PRIVILEGES",
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -1876,12 +2316,14 @@ fun PromptConfigPanel(viewModel: AssistantViewModel, glowColor: Color) {
                     modifier = Modifier.padding(bottom = 6.dp)
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("gemini-3.5-flash", "gemini-3.1-pro-preview").forEach { mName ->
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(listOf("gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-pro")) { mName ->
                         val isSelected = modelName == mName
                         Box(
                             modifier = Modifier
-                                .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
                                     if (isSelected) glowColor.copy(alpha = 0.2f)
@@ -1893,7 +2335,7 @@ fun PromptConfigPanel(viewModel: AssistantViewModel, glowColor: Color) {
                                     RoundedCornerShape(8.dp)
                                 )
                                 .clickable { viewModel.saveModel(mName) }
-                                .padding(12.dp),
+                                .padding(vertical = 10.dp, horizontal = 14.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(

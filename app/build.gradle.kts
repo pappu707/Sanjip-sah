@@ -86,6 +86,8 @@ dependencies {
   implementation(libs.androidx.compose.ui.graphics)
   implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.androidx.core.ktx)
+  implementation(libs.androidx.media3.exoplayer)
+  implementation(libs.androidx.media3.ui)
   // implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -123,24 +125,22 @@ dependencies {
   "ksp"(libs.moshi.kotlin.codegen)
 }
 
-tasks.register("generateDummyAsset") {
-    notCompatibleWithConfigurationCache("Generates a dummy asset file")
+tasks.register("downloadDummyVideo") {
+    notCompatibleWithConfigurationCache("Uses Providers.exec")
     doLast {
-        val f = file("src/main/assets/dummy_jarvis_model.mp4")
+        val f = file("src/main/res/raw/anime_girl_video.mp4")
         f.parentFile.mkdirs()
-        if (!f.exists() || f.length() < 12L * 1024 * 1024) {
-            val bytes = ByteArray(1024 * 1024)
-            f.outputStream().use { out ->
-                for (i in 0 until 12) {
-                    out.write(bytes)
-                }
-            }
+        val exists = f.exists()
+        if (exists == false) {
+            providers.exec {
+                commandLine("curl", "-Lo", f.absolutePath, "https://www.w3schools.com/html/mov_bbb.mp4")
+            }.result.get()
         }
     }
 }
 
 tasks.named("preBuild") {
-    dependsOn("generateDummyAsset")
+    dependsOn("downloadDummyVideo")
 }
 
 tasks.register<Copy>("copyApkOutputs") {

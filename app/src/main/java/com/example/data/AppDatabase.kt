@@ -160,10 +160,10 @@ abstract class AppDatabase : RoomDatabase() {
                                     """.trimIndent()
                                     db.execSQL("INSERT OR IGNORE INTO system_settings (`key`, `value`) VALUES ('system_prompt', ?)", arrayOf(prompt))
                                     db.execSQL("INSERT OR IGNORE INTO system_settings (`key`, `value`) VALUES ('model_name', 'gemini-3.5-flash')")
-                                    db.execSQL("INSERT OR IGNORE INTO system_settings (`key`, `value`) VALUES ('theme_color', 'Dark Hologram')")
+                                    db.execSQL("INSERT OR IGNORE INTO system_settings (`key`, `value`) VALUES ('theme_color', 'Android 14 Light')")
                                     db.execSQL("INSERT OR IGNORE INTO system_settings (`key`, `value`) VALUES ('voice_speed', '1.0')")
                                     db.execSQL("INSERT OR IGNORE INTO system_settings (`key`, `value`) VALUES ('voice_pitch', '1.0')")
-                                    db.execSQL("INSERT OR IGNORE INTO system_settings (`key`, `value`) VALUES ('avatar_style', 'Cyber Cybernetic Hologram')")
+                                    db.execSQL("INSERT OR IGNORE INTO system_settings (`key`, `value`) VALUES ('avatar_style', 'Anime Girl Live Chart')")
                                 } catch (e: Exception) {
                                     android.util.Log.e("AppDatabase", "Error seeding database", e)
                                 }

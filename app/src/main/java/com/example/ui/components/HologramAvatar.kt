@@ -281,17 +281,24 @@ fun HologramAvatar(
                 .background(Brush.radialGradient(listOf(Color.Black, Color(0xFF030D1B)))),
             contentAlignment = Alignment.Center
         ) {
-            // Core inner orb (Jarvis style)
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawCircle(
-                    color = glowColor.copy(alpha = 0.5f),
-                    radius = size.minDimension / 2.5f
+            if (avatarStyle == "Anime Girl Live Chart") {
+                VideoAvatar(
+                    modifier = Modifier.fillMaxSize(),
+                    isTalking = avatarState == AvatarState.SPEAKING || avatarState == AvatarState.THINKING
                 )
-                // Inner solid core
-                drawCircle(
-                    color = glowColor.copy(alpha = 0.8f),
-                    radius = size.minDimension / 4f
-                )
+            } else {
+                // Core inner orb (Jarvis style)
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawCircle(
+                        color = glowColor.copy(alpha = 0.5f),
+                        radius = size.minDimension / 2.5f
+                    )
+                    // Inner solid core
+                    drawCircle(
+                        color = glowColor.copy(alpha = 0.8f),
+                        radius = size.minDimension / 4f
+                    )
+                }
             }
 
             // State-specific sci-fi overlays (e.g. blinking scanners/wave overlay)
