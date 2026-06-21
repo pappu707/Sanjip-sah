@@ -1130,17 +1130,27 @@ fun HomeScreen(
                                 .border(1.dp, glowColor, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile",
-                                tint = glowColor,
-                                modifier = Modifier.size(20.dp)
+                            val avatarEmoji = when (userProfilePhoto) {
+                                "avatar_1" -> "🌸"
+                                "avatar_2" -> "💜"
+                                "avatar_3" -> "🐇"
+                                "avatar_4" -> "👚"
+                                else -> "👤"
+                            }
+                            Text(
+                                text = avatarEmoji,
+                                fontSize = 18.sp
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
+                            val nameToDisplay = if (userDisplayName.trim().isNotEmpty()) {
+                                userDisplayName.uppercase()
+                            } else {
+                                activeUser?.username?.uppercase() ?: "USER"
+                            }
                             Text(
-                                text = activeUser?.username?.uppercase() ?: "USER",
+                                text = nameToDisplay,
                                 color = textColor,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
@@ -1934,6 +1944,63 @@ fun HomeScreen(
                         }
                     }
 
+                    // Section 3.5: Assistant Hologram Visual Core Customizer
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isLight) Color.White else Color.White.copy(alpha = 0.03f)
+                        ),
+                        border = BorderStroke(1.dp, if (isLight) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.05f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "🌸 CHOOSE VISUAL AVATAR DESIGN",
+                                color = glowColor,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Select the active companion avatar appearance. Summons either professional futuristic geometries or interactive live Anime Girl!",
+                                color = subTextColor,
+                                fontSize = 11.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                listOf(
+                                    "Sci-Fi Cyber Suit" to "🌌 Cyber Orb",
+                                    "Anime Girl Live Chart" to "🌸 Anime Girl Live Core",
+                                    "Amber Hologram Mesh" to "🔥 Amber Net",
+                                    "Starship Commander" to "🚀 Star Commander"
+                                ).forEach { (suitName, displayName) ->
+                                    val isSelected = avatarStyle == suitName
+                                    Button(
+                                        onClick = { viewModel.saveAvatarStyle(suitName) },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (isSelected) glowColor else (if (isLight) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.04f))
+                                        ),
+                                        border = BorderStroke(1.dp, if (isSelected) Color.Transparent else glowColor.copy(alpha = 0.2f)),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Text(
+                                            text = displayName,
+                                            color = if (isSelected) (if (isLight) Color.White else Color.Black) else textColor,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Section 4: Sweet Theme Selection Customizer
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -2291,6 +2358,39 @@ fun HologramCenterpiece(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Anime Girl Quick Toggle Summon Button
+                val isAnimeSelected = style == "Anime Girl Live Chart"
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isAnimeSelected) glowColor.copy(alpha = 0.25f) else keyBg)
+                        .border(
+                            width = 1.dp,
+                            color = if (isAnimeSelected) glowColor else Color.Transparent,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .clickable {
+                            val targetStyle = if (isAnimeSelected) "Sci-Fi Cyber Suit" else "Anime Girl Live Chart"
+                            viewModel.saveAvatarStyle(targetStyle)
+                            if (targetStyle == "Anime Girl Live Chart") {
+                                viewModel.sendMessage("System: Anime Girl Live Core Summoned! Let's talk! 🌸")
+                            } else {
+                                viewModel.sendMessage("System: Reverting to Sci-Fi Cyber Core.")
+                            }
+                        }
+                        .padding(vertical = 6.dp, horizontal = 14.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (isAnimeSelected) "🌸 ACTIVE" else "🌸 SUMMON ANIME GIRL",
+                            color = if (isAnimeSelected) glowColor else keyTextColor,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+
                 // Wave Ava Button
                 Box(
                     modifier = Modifier
@@ -2876,12 +2976,21 @@ fun PromptConfigPanel(viewModel: AssistantViewModel, glowColor: Color) {
                     modifier = Modifier.padding(bottom = 6.dp)
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Sci-Fi Cyber Suit", "Amber Hologram Mesh", "Starship Commander").forEach { suitName ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf(
+                        "Sci-Fi Cyber Suit",
+                        "Anime Girl Live Chart",
+                        "Amber Hologram Mesh",
+                        "Starship Commander"
+                    ).forEach { suitName ->
                         val isSelected = avatarStyle == suitName
                         Box(
                             modifier = Modifier
-                                .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
                                     if (isSelected) glowColor.copy(alpha = 0.2f)
@@ -2897,7 +3006,7 @@ fun PromptConfigPanel(viewModel: AssistantViewModel, glowColor: Color) {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = suitName.uppercase(),
+                                text = if (suitName == "Anime Girl Live Chart") "ANIME GIRL" else suitName.uppercase(),
                                 color = if (isSelected) glowColor else Color.White,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
