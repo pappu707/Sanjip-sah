@@ -281,13 +281,18 @@ fun HologramAvatar(
                 .background(Brush.radialGradient(listOf(Color.Black, Color(0xFF030D1B)))),
             contentAlignment = Alignment.Center
         ) {
-            // Displays generated beautiful avatar image
-            Image(
-                painter = painterResource(id = R.drawable.img_ava_avatar_custom_1782013638273),
-                contentDescription = "Ava Portrait",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+            // Core inner orb (Jarvis style)
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawCircle(
+                    color = glowColor.copy(alpha = 0.5f),
+                    radius = size.minDimension / 2.5f
+                )
+                // Inner solid core
+                drawCircle(
+                    color = glowColor.copy(alpha = 0.8f),
+                    radius = size.minDimension / 4f
+                )
+            }
 
             // State-specific sci-fi overlays (e.g. blinking scanners/wave overlay)
             if (avatarState == AvatarState.THINKING) {

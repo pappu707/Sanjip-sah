@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -1148,6 +1149,20 @@ fun HomeScreen(
                         }
 
                         IconButton(
+                            onClick = { activeUser?.id?.let { viewModel.clearAllMessagesForUser(it) } },
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(buttonBg)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Clear conversational memory",
+                                tint = glowColor
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        IconButton(
                             onClick = { viewModel.logout() },
                             modifier = Modifier
                                 .clip(CircleShape)
@@ -1226,11 +1241,27 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.width(10.dp))
 
                     // Microphone Speak Trigger Activator (Speech recognition)
+                    val pulseInfiniteTransition = rememberInfiniteTransition(label = "pulse")
+                    val isProcessing = avatarState == AvatarState.THINKING
+                    val pulseScale by pulseInfiniteTransition.animateFloat(
+                        initialValue = 1f,
+                        targetValue = if (isListening || isProcessing) 1.25f else 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = if (isListening) 400 else 800, easing = EaseInOutSine),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "micPulseScale"
+                    )
+
                     Box(
                         modifier = Modifier
+                            .graphicsLayer {
+                                scaleX = pulseScale
+                                scaleY = pulseScale
+                            }
                             .size(54.dp)
                             .clip(CircleShape)
-                            .background(if (isListening) Color.Red else glowColor)
+                            .background(if (isListening) Color.Red else if (isProcessing) Color(0xFFFF007F) else glowColor)
                             .clickable {
                                 if (isListening) {
                                     voiceManager?.stopListening()
@@ -1244,7 +1275,7 @@ fun HomeScreen(
                         Icon(
                             imageVector = if (isListening) Icons.Default.MicOff else Icons.Default.Mic,
                             contentDescription = "Microphone core link",
-                            tint = if (isListening) Color.White else Color.Black,
+                            tint = if (isListening || isProcessing) Color.White else Color.Black,
                             modifier = Modifier.size(24.dp)
                         )
                     }

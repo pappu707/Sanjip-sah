@@ -122,8 +122,8 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
             _systemPrompt.value = savedPrompt
             _modelName.value = repository.getSetting("model_name", "gemini-3.5-flash")
             _themeColor.value = repository.getSetting("theme_color", "Dark Hologram")
-            _voiceSpeed.value = repository.getSetting("voice_speed", "1.1").toFloatOrNull()?.takeIf { it != 1.0f } ?: 1.1f
-            _voicePitch.value = repository.getSetting("voice_pitch", "1.4").toFloatOrNull()?.takeIf { it != 1.0f } ?: 1.4f
+            _voiceSpeed.value = repository.getSetting("voice_speed", "1.0").toFloatOrNull() ?: 1.0f
+            _voicePitch.value = repository.getSetting("voice_pitch", "1.15").toFloatOrNull() ?: 1.15f
             _avatarStyle.value = repository.getSetting("avatar_style", "Cyber Cybernetic Hologram")
         }
     }

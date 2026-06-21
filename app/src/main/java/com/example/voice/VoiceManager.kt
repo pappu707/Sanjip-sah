@@ -76,16 +76,21 @@ class VoiceManager(
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            tts?.language = Locale.US
+            val defaultLocale = Locale.getDefault()
+            val result = tts?.setLanguage(defaultLocale)
+            
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                tts?.language = Locale.US
+            }
+
             try {
                 val voices = tts?.voices
                 if (voices != null) {
-                    val fallbackVoices = listOf("en-US-language", "en-GB-language")
-                    // In Android Google TTS, female voices often have specific names or feature tags
-                    val preferredVoice = voices.firstOrNull { it.name.contains("en-us-x-sfg", ignoreCase = true) }
-                        ?: voices.firstOrNull { it.name.contains("en-us-x-tpf", ignoreCase = true) }
+                    val currentLang = tts?.language?.language ?: "en"
+                    val preferredVoice = voices.firstOrNull { it.locale.language == currentLang && it.name.contains("female", ignoreCase = true) }
+                        ?: voices.firstOrNull { it.locale.language == currentLang }
+                        ?: voices.firstOrNull { it.name.contains("en-us-x-sfg", ignoreCase = true) }
                         ?: voices.firstOrNull { it.name.contains("female", ignoreCase = true) && it.locale.language == "en" }
-                        ?: voices.firstOrNull { it.name.endsWith("-local") && it.locale.language == "en" }
 
                     if (preferredVoice != null) {
                         tts?.voice = preferredVoice

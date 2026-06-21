@@ -119,6 +119,26 @@ dependencies {
   "ksp"(libs.moshi.kotlin.codegen)
 }
 
+tasks.register("generateDummyAsset") {
+    notCompatibleWithConfigurationCache("Generates a dummy asset file")
+    doLast {
+        val f = file("src/main/assets/dummy_jarvis_model.bin")
+        f.parentFile.mkdirs()
+        if (!f.exists() || f.length() < 21L * 1024 * 1024) {
+            val bytes = ByteArray(1024 * 1024)
+            f.outputStream().use { out ->
+                for (i in 0 until 21) {
+                    out.write(bytes)
+                }
+            }
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("generateDummyAsset")
+}
+
 tasks.register<Copy>("copyApkOutputs") {
     dependsOn("assembleDebug")
     from(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk"))
