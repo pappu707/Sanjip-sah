@@ -1,0 +1,6 @@
+{
+  "name": "AVA OS",
+  "description": "An advanced cybernetic AI assistant styled with visual hologram arrays, natural Text-to-Speech vocal output, record voice cues, and private user credentials database powered by the Gemini 3.5 API.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
